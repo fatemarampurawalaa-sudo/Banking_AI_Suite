@@ -30,7 +30,7 @@ def call_ai(contents, config=None, tries=3):
 STATEMENT = pd.DataFrame({
     "date": pd.date_range("2026-10-01", periods=30, freq="D").strftime("%Y-%m-%d"),
     "description": [
-        "SALARY CREDIT - CTA", "CARREFOUR MALL OF EMIRATES", "DEWA BILL PAYMENT", "NETFLIX.COM",
+        "SALARY CREDIT - ABC TRADING LLC", "CARREFOUR MALL OF EMIRATES", "DEWA BILL PAYMENT", "NETFLIX.COM",
         "UBER *TRIP DUBAI", "TALABAT ORDER", "ENOC FUEL STATION", "ZARA DUBAI MALL",
         "RENT TRANSFER - LANDLORD", "STARBUCKS JBR", "ETISALAT POSTPAID", "NOON.COM ORDER",
         "CAREEM RIDE", "LULU HYPERMARKET", "AMAZON.AE", "GYM MEMBERSHIP - FITNESS FIRST",
@@ -47,7 +47,7 @@ STATEMENT = pd.DataFrame({
 
 # Backup categories, used only if the AI service is busy
 BACKUP_CATEGORIES = {
-    "SALARY CREDIT - CTA": "Income", "CARREFOUR MALL OF EMIRATES": "Groceries",
+    "SALARY CREDIT - ABC TRADING LLC": "Income", "CARREFOUR MALL OF EMIRATES": "Groceries",
     "DEWA BILL PAYMENT": "Bills & Utilities", "NETFLIX.COM": "Entertainment",
     "UBER *TRIP DUBAI": "Transport", "TALABAT ORDER": "Food & Dining", "ENOC FUEL STATION": "Transport",
     "ZARA DUBAI MALL": "Shopping", "RENT TRANSFER - LANDLORD": "Rent & Housing", "STARBUCKS JBR": "Food & Dining",
