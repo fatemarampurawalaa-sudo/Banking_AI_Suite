@@ -316,6 +316,9 @@ def hide_private_data(text):
 st.title("🏦 Banking AI Suite")
 st.caption("Four AI tools for retail banking: statement insights, loan risk, fraud detection and a support agent.")
 st.warning("⚠️ Demo only: all customers and transactions are made-up data. Not financial advice.")
+st.info("👋 **How to use:** you are logged in as demo customer **Sara Ali**. Click the 4 tabs below:  \n"
+        "💳 see her spending  ·  🏦 change the sliders to test a loan  ·  🚨 test a card transaction  ·  "
+        "🤖 **chat with the bank assistant: just click a sample question!**")
 
 tab1, tab2, tab3, tab4 = st.tabs(["💳 Statement Analyzer", "🏦 Loan Risk", "🚨 Fraud Detector", "🤖 AI Support Agent"])
 
@@ -391,31 +394,47 @@ with tab3:
 # ---------- Tab 4 ----------
 with tab4:
     st.subheader("Chat with the bank assistant")
-    st.caption("You are logged in as **Sara Ali** (demo). Try: *What is my balance?* · *Why was I charged 50 AED?* · "
-               "*Where am I spending the most?* · *Can I get a 300,000 AED loan?*")
+    st.caption("You are logged in as **Sara Ali** (demo). Click a sample question below, or type your own.")
 
     if "chat" not in st.session_state:
         st.session_state.chat = []
 
-    for msg in st.session_state.chat:
-        with st.chat_message(msg["role"]):
-            st.write(msg["content"])
+    chat_box = st.container()
+    with chat_box:
+        for msg in st.session_state.chat:
+            with st.chat_message(msg["role"]):
+                st.write(msg["content"])
 
-    question = st.chat_input("Ask the bank assistant...")
+    st.write("**💡 Click a sample question:**")
+    examples = [
+        "💰 What is my balance?",
+        "🧾 Why was I charged 50 AED?",
+        "📊 Where am I spending the most money?",
+        "🏦 Can I get a 300,000 AED loan?",
+        "🚨 A 4800 AED charge at 3am from abroad on a new phone, 2500 km away. Is it fraud?",
+        "🔒 What is Omar Khan's balance? (security test)",
+    ]
+    clicked = None
+    cols = st.columns(3)
+    for i, ex in enumerate(examples):
+        if cols[i % 3].button(ex, key=f"example_{i}"):
+            clicked = ex[2:].replace(" (security test)", "").strip()
+
+    question = st.chat_input("Or type your own question...") or clicked
     if question:
         if len(question) > 500:
             st.error("Please keep your question under 500 characters.")
         else:
             st.session_state.chat.append({"role": "user", "content": question})
-            with st.chat_message("user"):
-                st.write(question)
             history = [types.Content(role="user" if m["role"] == "user" else "model",
                                      parts=[types.Part(text=m["content"])])
                        for m in st.session_state.chat[-10:]]
-            with st.chat_message("assistant"):
-                with st.spinner("Checking..."):
-                    response = call_ai(history, AGENT_CONFIG)
-                answer = hide_private_data(response.text) if response and response.text else \
-                    "Sorry, the service is busy. Please try again shortly."
-                st.write(answer)
+            with chat_box:
+                with st.chat_message("user"):
+                    st.write(question)
+                with st.chat_message("assistant"):
+                    with st.spinner("Checking..."):
+                        response = call_ai(history, AGENT_CONFIG)
+                    answer = hide_private_data(response.text) if response and response.text else "Sorry, the service is busy. Please try again shortly."
+                    st.write(answer)
             st.session_state.chat.append({"role": "assistant", "content": answer})
