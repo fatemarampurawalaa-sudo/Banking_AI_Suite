@@ -145,8 +145,18 @@ def train_fraud_model():
         "is_foreign": r.choice([0, 1], nf, p=[0.3, 0.7]), "new_device": r.choice([0, 1], nf, p=[0.4, 0.6]),
         "txns_last_hour": r.poisson(5, nf), "distance_km": r.exponential(800, nf).round(1), "fraud": 1,
     })
-    df = pd.concat([normal, fraud])
-    model = XGBClassifier(n_estimators=200, max_depth=4, learning_rate=0.1, scale_pos_weight=nn / nf)
+    # "Grey zone": daytime, abroad, fairly large amounts, sometimes a new device.
+    # In real life most of these are genuine, but some are fraud, so the model learns to be unsure (→ OTP).
+    ng = 500
+    grey = pd.DataFrame({
+        "amount": r.gamma(2, 900, ng).round(0), "hour": r.choice(range(6, 24), ng),
+        "is_foreign": 1, "new_device": r.choice([0, 1], ng, p=[0.7, 0.3]),
+        "txns_last_hour": r.poisson(2, ng), "distance_km": r.exponential(3000, ng).round(1),
+        "fraud": r.choice([0, 1], ng, p=[0.8, 0.2]),
+    })
+    df = pd.concat([normal, fraud, grey])
+    model = XGBClassifier(n_estimators=150, max_depth=3, learning_rate=0.1, min_child_weight=5,
+                          scale_pos_weight=5)
     model.fit(df[FRAUD_FEATURES], df["fraud"])
     return model
 
@@ -293,7 +303,11 @@ def make_transactions(n):
             city = random.choice(RISKY)
             amount, hour = round(random.gammavariate(3, 900)), random.randint(0, 5)
             new_device, txns = int(random.random() < 0.6), random.randint(3, 8)
-        elif roll < 0.20:    # customer travelling abroad (normal)
+        elif roll < 0.13:    # grey zone: abroad, daytime, bigger amount (model is unsure → OTP)
+            city = random.choice(TRAVEL + RISKY)
+            amount, hour = round(random.gammavariate(2, 900)), random.randint(9, 20)
+            new_device, txns = int(random.random() < 0.3), random.randint(1, 3)
+        elif roll < 0.25:    # customer travelling abroad (normal)
             city = random.choice(TRAVEL)
             amount, hour = round(random.gammavariate(2, 250)), random.randint(8, 22)
             new_device, txns = int(random.random() < 0.05), random.randint(0, 2)
